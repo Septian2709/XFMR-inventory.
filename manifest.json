@@ -1,7 +1,7 @@
 {
-    "name": "Inventaris Mobile - PWA",
+    "name": "XFMR Stock Inventory Kit - PWA",
     "short_name": "Inventaris",
-    "description": "Aplikasi manajemen inventaris terintegrasi Google Sheets",
+    "description": "Aplikasi manajemen inventaris di bagian Asam Sulfat & Utilitas IIIB",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#ffffff",
