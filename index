@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inventaris Mobile Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--light);
+            min-height: 100vh;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Auth Screen (Login/Register) */
+        .auth-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 30px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .auth-card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            color: var(--dark);
+            box-shadow: var(--shadow-lg);
+        }
+        .auth-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: var(--primary); }
+        .auth-toggle { text-align: center; margin-top: 15px; font-size: 0.9rem; color: #4b5563; cursor: pointer; }
+        .auth-toggle span { color: var(--primary); font-weight: 600; }
+
+        /* Header Components */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white; padding: 20px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .header h1 { font-size: 1.3rem; font-weight: 700; }
+        .user-profile-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; opacity: 0.9; margin-top: 5px; }
+        .logout-btn { background: none; border: none; color: white; cursor: pointer; font-size: 0.9rem; }
+        
+        /* Sync Button Animation */
+        .sync-btn { background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .sync-btn.syncing { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Rest of your styles unmodified for stability */
+        .connection-status { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; opacity: 0.9; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+        .status-dot.offline { background: var(--warning); }
+        .search-container { padding: 15px 20px; background: white; border-bottom: 1px solid #e5e7eb; }
+        .search-box { position: relative; display: flex; gap: 10px; }
+        .search-input { flex: 1; padding: 12px 15px 12px 40px; border: 2px solid #e5e7eb; border-radius: 25px; font-size: 0.95rem; }
+        .search-input:focus { outline: none; border-color: var(--primary); }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+        .scan-btn { width: 45px; height: 45px; border: none; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px 20px; background: white; }
+        .stat-card { background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); padding: 15px; border-radius: 15px; text-align: center; }
+        .stat-number { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 0.7rem; color: #6b7280; margin-top: 5px; text-transform: uppercase; }
+        .inventory-list { padding: 10px 20px 100px; }
+        .section-title { font-size: 0.85rem; color: #6b7280; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .item-card { background: white; border-radius: 16px; padding: 15px; margin-bottom: 12px; box-shadow: var(--shadow); display: flex; gap: 15px; position: relative; }
+        .item-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .item-name { font-weight: 600; font-size: 1rem; margin-bottom: 5px; }
+        .item-code { font-size: 0.8rem; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 5px; max-width: max-content; }
+        .item-meta { display: flex; gap: 10px; font-size: 0.8rem; color: #6b7280; }
+        .item-actions { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+        .action-btn { width: 36px; height: 36px; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .action-btn.edit { background: #dbeafe; color: #2563eb; }
+        .action-btn.delete { background: #fee2e2; color: #dc2626; }
+        .stock-badge { position: absolute; top: 10px; right: 10px; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .stock-high { background: #d1fae5; color: #059669; }
+        .stock-medium { background: #fef3c7; color: #d97706; }
+        .stock-low { background: #fee2e2; color: #dc2626; }
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; border: none; font-size: 1.5rem; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4); display: flex; align-items: center; justify-content: center; z-index: 99; }
+        
+        /* Modal Form & Inputs */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal.active { display: flex; align-items: flex-end; justify-content: center; }
+        .modal-content { background: white; width: 100%; max-width: 480px; border-radius: 25px 25px 0 0; padding: 25px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+        .form-input, .form-select { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 1rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .submit-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; border: none; border-radius: 12px; font-weight: 600; margin-top: 10px; cursor: pointer; }
+        .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--dark); color: white; padding: 12px 24px; border-radius: 25px; font-size: 0.9rem; opacity: 0; transition: all 0.3s; z-index: 1500; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .loading { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2000; }
+        .loading.active { display: block; }
+        .spinner { width: 50px; height: 50px; border: 4px solid #f3f4f6; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-card">
+            <div id="loginFormContainer">
+                <h2 class="auth-title">Masuk ke Inventaris</h2>
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" id="loginUser" class="form-input" placeholder="Masukkan username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="loginPass" class="form-input" placeholder="Masukkan password">
+                </div>
+                <button class="submit-btn" onclick="handleLogin()">Masuk <i class="fas fa-sign-in-alt"></i></button>
+                <div class="auth-toggle" onclick="toggleAuthView(true)">Belum punya akun? <span>Daftar Sekarang</span></div>
+            </div>
+
+            <div id="registerFormContainer" class="hidden">
+                <h2 class="auth-title">Daftar Akun Baru</h2>
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap</label>
+                    <input type="text" id="regName" class="form-input" placeholder="Nama Anda">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" id="regUser" class="form-input" placeholder="Buat username unik">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="regPass" class="form-input" placeholder="Buat password keamanan">
+                </div>
+                <button class="submit-btn" onclick="handleRegister()">Daftar Akun <i class="fas fa-user-plus"></i></button>
+                <div class="auth-toggle" onclick="toggleAuthView(false)">Sudah punya akun? <span>Silakan Login</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer" style="display: none;">
+        <div class="header">
+            <div class="header-top">
+                <h1><i class="fas fa-boxes"></i> Inventaris Mobile</h1>
+                <button class="sync-btn" id="syncBtn" onclick="syncData()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div class="user-profile-bar">
+                <span>Halo, <b id="displayUserName">User</b></span>
+                <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+            </div>
+            <div class="connection-status" style="margin-top: 10px;">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Menghubungkan...</span>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="searchInput" placeholder="Cari item..." onkeyup="searchItems()">
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-number" id="totalItems">0</div>
+                <div class="stat-label">Total Item</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalStock">0</div>
+                <div class="stat-label">Total Stok</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="lowStock">0</div>
+                <div class="stat-label">Stok Low</div>
+            </div>
+        </div>
+
+        <div class="inventory-list" id="inventoryList">
+            <div class="section-title">Daftar Inventaris</div>
+        </div>
+
+        <button class="fab" onclick="openModal()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Tambah Item</h3>
+                <button style="border:none; background:none; font-size:1.5rem;" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="itemForm" onsubmit="saveItem(event)">
+                <input type="hidden" id="itemId">
+                <div class="form-group">
+                    <label class="form-label">Kode / Barcode</label>
+                    <input type="text" class="form-input" id="itemCode" required placeholder="Kode produk">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nama Item</label>
+                    <input type="text" class="form-input" id="itemName" required placeholder="Nama item">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Kategori</label>
+                        <select class="form-select" id="itemCategory">
+                            <option value="Elektronik">Elektronik</option>
+                            <option value="Alat Kesehatan">Alat Kesehatan</option>
+                            <option value="Logistik">Logistik</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stok</label>
+                        <input type="number" class="form-input" id="itemStock" required min="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Harga Beli</label>
+                        <input type="number" class="form-input" id="itemCost" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Harga Jual</label>
+                        <input type="number" class="form-input" id="itemPrice" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lokasi</label>
+                    <input type="text" class="form-input" id="itemLocation" placeholder="Rak / Kotak">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Catatan</label>
+                    <input type="text" class="form-input" id="itemNotes">
+                </div>
+                <button type="submit" class="submit-btn"><i class="fas fa-save"></i> Simpan Item</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="loading" id="loading"><div class="spinner"></div></div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Masukkan URL Google Apps Script Web App Anda hasil deploy di sini
+        const WEB_APP_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQsdKGLwEz2ja9XwvqiQkcHfnjC2vvrwAffN970So4F1NIwF_ukO_Kz4kQgbECtLk4jk3UHDE1JzS8JqtBsHTRPx5_243ufoN8DoQL2HGS7r11XAziwO0eNJGefxhkbXyYfphMj95s__2ipM6p9MwH9BbQy4TTtjI-7OSl7ngfVEerd7z0VmezKeyk6WgB3mRLFFEMNWMhqSNrFsy2uUmf_-0LEkcZUdErBmoC2EYQgjkA-A05ZWbTG24F7dSpYXuZ5xuSo5URSuJ8mW5f9hsHf4DjHzA&lib=M1GjZv4e6aj1J1xxoaGnDyBOI2LUoqAv3";
+
+        let inventoryData = [];
+        let isOnline = navigator.onLine;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+            window.addEventListener('online', () => { isOnline = true; updateStatusInfo(); });
+            window.addEventListener('offline', () => { isOnline = false; updateStatusInfo(); });
+            updateStatusInfo();
+        });
+
+        function toggleAuthView(showRegister) {
+            document.getElementById('loginFormContainer').classList.toggle('hidden', showRegister);
+            document.getElementById('registerFormContainer').classList.toggle('hidden', !showRegister);
+        }
+
+        function updateStatusInfo() {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            if(dot && text) {
+                dot.className = isOnline ? "status-dot" : "status-dot offline";
+                text.textContent = isOnline ? "Terhubung ke Cloud Database" : "Offline Mode (Lokal)";
+            }
+        }
+
+        function checkSession() {
+            const session = localStorage.getItem('userSession');
+            if (session) {
+                const user = JSON.parse(session);
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('appContainer').style.display = 'block';
+                document.getElementById('displayUserName').textContent = user.name;
+                loadInitialData();
+            }
+        }
+
+        async function handleLogin() {
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            if (!user || !pass) return showToast('Harap isi semua kolom');
+
+            showLoading(true);
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', username: user, password: btoa(pass) })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    localStorage.setItem('userSession', JSON.stringify(result.user));
+                    showToast('Selamat datang ' + result.user.name);
+                    checkSession();
+                } else {
+                    showToast(result.error);
+                }
+            } catch(e) {
+                showToast('Koneksi internet bermasalah');
+            } finally { showLoading(false); }
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('regName').value.trim();
+            const user = document.getElementById('regUser').value.trim();
+            const pass = document.getElementById('regPass').value.trim();
+            if(!name || !user || !pass) return showToast('Lengkapi formulir pendaftaran');
+
+            showLoading(true);
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'register', name: name, username: user, password: btoa(pass) })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    showToast('Registrasi Berhasil! Silakan login.');
+                    toggleAuthView(false);
+                } else { showToast(result.error); }
+            } catch(e) { showToast('Registrasi gagal terkirim'); }
+            finally { showLoading(false); }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('userSession');
+            localStorage.removeItem('inventoryData');
+            location.reload();
+        }
+
+        async function loadInitialData() {
+            const local = localStorage.getItem('inventoryData');
+            if(local) {
+                inventoryData = JSON.parse(local);
+                renderInventory();
+                updateStats();
+            }
+            if(isOnline) {
+                showLoading(true);
+                try {
+                    const res = await fetch(WEB_APP_URL);
+                    const cloudData = await res.json();
+                    if(Array.isArray(cloudData)) {
+                        inventoryData = cloudData;
+                        localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
+                        renderInventory();
+                        updateStats();
+                    }
+                } catch(e) { console.log('Gagal ambil data cloud, pakai data lokal'); }
+                finally { showLoading(false); }
+            }
+        }
+
+        async function syncToSheets() {
+            if(!isOnline) return showToast('Anda sedang offline. Data disimpan lokal.');
+            const btn = document.getElementById('syncBtn');
+            btn.classList.add('syncing');
+
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'sync', data: inventoryData })
+                });
+                const result = await res.json();
+                if(result.success) showToast('Database Cloud Sinkron!');
+            } catch(e) { showToast('Gagal sinkronisasi data cloud'); }
+            finally { btn.classList.remove('syncing'); }
+        }
+
+        function syncData() { syncToSheets(); }
+
+        function renderInventory(items = inventoryData) {
+            const container = document.getElementById('inventoryList');
+            if (items.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 40px; color:#9ca3af;"><i class="fas fa-box-open" style="font-size:3rem; margin-bottom:10px;"></i><p>Tidak ada produk ditemukan</p></div>`;
+                return;
+            }
+            let html = '<div class="section-title">Daftar Inventaris</div>';
+            items.forEach(item => {
+                const stockClass = item.stock <= 5 ? 'stock-low' : item.stock <= 20 ? 'stock-medium' : 'stock-high';
+                const stockText = item.stock <= 5 ? 'Stok Kritis' : item.stock <= 20 ? 'Stok Menipis' : 'Aman';
+                html += `
+                    <div class="item-card">
+                        <div class="stock-badge ${stockClass}">${stockText}</div>
+                        <div class="item-info">
+                            <div class="item-name">${item.name}</div>
+                            <span class="item-code">${item.code}</span>
+                            <div class="item-meta">
+                                <span><i class="fas fa-tag"></i> ${item.category}</span>
+                                <span><i class="fas fa-cubes"></i> ${item.stock} unit</span>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="action-btn edit" onclick="editItem('${item.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete" onclick="deleteItem('${item.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function updateStats() {
+            document.getElementById('totalItems').textContent = inventoryData.length;
+            document.getElementById('totalStock').textContent = inventoryData.reduce((s, i) => s + parseInt(i.stock || 0), 0);
+            document.getElementById('lowStock').textContent = inventoryData.filter(i => i.stock <= 5).length;
+        }
+
+        function searchItems() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            renderInventory(inventoryData.filter(i => i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q)));
+        }
+
+        function openModal() {
+            document.getElementById('itemModal').classList.add('active');
+            document.getElementById('modalTitle').textContent = 'Tambah Item';
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemId').value = '';
+        }
+        function closeModal() { document.getElementById('itemModal').classList.remove('active'); }
+
+        function editItem(id) {
+            const item = inventoryData.find(i => i.id === id);
+            if (!item) return;
+            openModal();
+            document.getElementById('modalTitle').textContent = 'Edit Item';
+            document.getElementById('itemId').value = item.id;
+            document.getElementById('itemCode').value = item.code;
+            document.getElementById('itemName').value = item.name;
+            document.getElementById('itemCategory').value = item.category;
+            document.getElementById('itemStock').value = item.stock;
+            document.getElementById('itemCost').value = item.cost;
+            document.getElementById('itemPrice').value = item.price;
+            document.getElementById('itemLocation').value = item.location;
+            document.getElementById('itemNotes').value = item.notes;
+        }
+
+        function saveItem(e) {
+            e.preventDefault();
+            const id = document.getElementById('itemId').value;
+            const item = {
+                id: id || Date.now().toString(),
+                code: document.getElementById('itemCode').value,
+                name: document.getElementById('itemName').value,
+                category: document.getElementById('itemCategory').value,
+                stock: parseInt(document.getElementById('itemStock').value),
+                cost: document.getElementById('itemCost').value,
+                price: document.getElementById('itemPrice').value,
+                location: document.getElementById('itemLocation').value,
+                notes: document.getElementById('itemNotes').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (id) {
+                const idx = inventoryData.findIndex(i => i.id === id);
+                inventoryData[idx] = item;
+            } else { inventoryData.unshift(item); }
+
+            localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
+            renderInventory();
+            updateStats();
+            closeModal();
+            syncToSheets();
+        }
+
+        function deleteItem(id) {
+            if (confirm('Hapus item ini?')) {
+                inventoryData = inventoryData.filter(i => i.id !== id);
+                localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
+                renderInventory();
+                updateStats();
+                syncToSheets();
+            }
+        }
+
+        function showLoading(v) { document.getElementById('loading').classList.toggle('active', v); }
+        function showToast(m) {
+            const t = document.getElementById('toast');
+            t.textContent = m; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker terdaftar!', reg))
+        .catch(err => console.log('Gagal mendaftarkan Service Worker', err));
+    });
+  }
+</script>
+  }
+</body>
+</html>
