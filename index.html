@@ -1,0 +1,748 @@
+
+ '''<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#667eea">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="InventarisKu">
+  <meta name="description" content="Aplikasi manajemen inventaris barang PWA">
+  
+  <title>InventarisKu - Manajemen Stok</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" href="icons/icon-72x72.png">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+    }
+    
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      box-shadow: 0 0 40px rgba(0,0,0,0.08);
+    }
+    
+    /* ===== LOGIN PAGE ===== */
+    .login-page {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .login-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.25);
+      animation: fadeInUp 0.5s ease;
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .login-logo {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(102,126,234,0.3);
+    }
+    
+    .login-logo svg { width: 36px; height: 36px; color: #fff; }
+    
+    .login-title { font-size: 24px; font-weight: 800; color: #1a1a2e; text-align: center; margin-bottom: 4px; }
+    .login-subtitle { font-size: 13px; color: #888; text-align: center; margin-bottom: 32px; }
+    
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input-group input {
+      width: 100%; padding: 14px 16px; border: 2px solid #e8e8e8; border-radius: 14px;
+      font-size: 15px; font-family: inherit; transition: all 0.2s;
+    }
+    .input-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 4px rgba(102,126,234,0.1); }
+    
+    .btn-primary {
+      width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; border: none; border-radius: 14px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; margin-top: 8px;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    
+    .login-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #999; }
+    .login-footer a { color: #667eea; text-decoration: none; font-weight: 600; }
+    
+    .login-error { 
+      background: #fef2f2; color: #ef4444; padding: 10px 14px; border-radius: 10px; 
+      font-size: 13px; margin-bottom: 16px; display: none; align-items: center; gap: 8px;
+    }
+    .login-error.show { display: flex; }
+    
+    /* ===== MAIN APP ===== */
+    .main-app { display: none; }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 20px 20px 24px;
+      color: #fff;
+      position: sticky; top: 0; z-index: 100;
+    }
+    
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .header-title { font-size: 20px; font-weight: 800; }
+    
+    .header-user { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px; border-radius: 10px; transition: background 0.2s; }
+    .header-user:hover { background: rgba(255,255,255,0.1); }
+    
+    .user-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,0.25); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat-card {
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+      border-radius: 14px; padding: 14px 8px; text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .stat-value { font-size: 22px; font-weight: 800; }
+    .stat-label { font-size: 10px; opacity: 0.85; margin-top: 2px; font-weight: 500; }
+    
+    /* ===== CONTENT ===== */
+    .content { padding: 16px; padding-bottom: 90px; }
+    
+    .section-title { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    
+    .search-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 2px solid #e8e8e8; border-radius: 14px;
+      padding: 12px 16px; margin-bottom: 16px; transition: border-color 0.2s;
+    }
+    .search-bar:focus-within { border-color: #667eea; }
+    .search-bar input { flex: 1; border: none; outline: none; font-size: 14px; font-family: inherit; }
+    .search-bar svg { color: #999; flex-shrink: 0; }
+    .search-bar .clear-btn { 
+      width: 22px; height: 22px; border-radius: 50%; background: #eee; 
+      border: none; color: #666; font-size: 12px; cursor: pointer; display: none;
+      align-items: center; justify-content: center;
+    }
+    .search-bar .clear-btn.show { display: flex; }
+    
+    /* ===== ITEM CARD ===== */
+    .item-card {
+      background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04); border: 1px solid #f0f0f0;
+      display: flex; gap: 14px; align-items: center;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .item-card:hover { transform: translateX(4px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .item-card:active { transform: scale(0.98); }
+    
+    .item-icon {
+      width: 50px; height: 50px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .item-icon.blue { background: linear-gradient(135deg, #eef2ff, #e0e7ff); color: #6366f1; }
+    .item-icon.green { background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #10b981; }
+    .item-icon.orange { background: linear-gradient(135deg, #fff7ed, #ffedd5); color: #f97316; }
+    .item-icon.red { background: linear-gradient(135deg, #fef2f2, #fee2e2); color: #ef4444; }
+    .item-icon.purple { background: linear-gradient(135deg, #faf5ff, #f3e8ff); color: #a855f7; }
+    
+    .item-info { flex: 1; min-width: 0; }
+    .item-name { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-meta { font-size: 12px; color: #888; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    
+    .item-qty { font-size: 20px; font-weight: 800; text-align: right; min-width: 45px; }
+    .qty-low { color: #ef4444; }
+    .qty-med { color: #f97316; }
+    .qty-ok { color: #10b981; }
+    
+    .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-icon {
+      width: 34px; height: 34px; border-radius: 10px; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-icon.plus { background: #ecfdf5; color: #10b981; }
+    .btn-icon.minus { background: #fef2f2; color: #ef4444; }
+    .btn-icon:hover { transform: scale(1.15); }
+    .btn-icon:active { transform: scale(0.95); }
+    
+    /* ===== HISTORY ===== */
+    .history-item {
+      background: #fff; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px;
+      border-left: 4px solid transparent; transition: all 0.2s;
+    }
+    .history-item:hover { transform: translateX(2px); }
+    .history-item.in { border-left-color: #10b981; }
+    .history-item.out { border-left-color: #ef4444; }
+    
+    .history-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .history-dot.in { background: #10b981; }
+    .history-dot.out { background: #ef4444; }
+    
+    .history-info { flex: 1; min-width: 0; }
+    .history-item-name { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .history-detail { font-size: 12px; color: #888; margin-top: 3px; line-height: 1.5; }
+    
+    .history-qty { font-size: 16px; font-weight: 800; min-width: 55px; text-align: right; }
+    .history-qty.in { color: #10b981; }
+    .history-qty.out { color: #ef4444; }
+    
+    /* ===== FLOATING ACTION BUTTON ===== */
+    .fab {
+      position: fixed; bottom: 88px; right: 20px;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff; border: none; font-size: 28px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 6px 24px rgba(102,126,234,0.4);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 200;
+    }
+    .fab:hover { transform: scale(1.1) rotate(90deg); }
+    .fab:active { transform: scale(0.95); }
+    .fab.hidden { transform: scale(0); opacity: 0; pointer-events: none; }
+    
+    /* ===== BOTTOM NAV ===== */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px; background: #fff;
+      border-top: 1px solid #eee; display: grid; grid-template-columns: repeat(3, 1fr);
+      padding: 8px 0 12px; z-index: 150;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 4px; cursor: pointer; color: #bbb; transition: all 0.2s;
+      border: none; background: none; font-family: inherit;
+    }
+    .nav-item.active { color: #667eea; }
+    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item span { font-size: 10px; font-weight: 600; }
+    
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: flex-end; justify-content: center;
+      z-index: 300; opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-overlay.show { opacity: 1; }
+    
+    .modal-sheet {
+      background: #fff; border-radius: 28px 28px 0 0; padding: 28px 24px 32px;
+      width: 100%; max-width: 480px;
+      transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .modal-overlay.show .modal-sheet { transform: translateY(0); }
+    
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-title { font-size: 20px; font-weight: 800; color: #1a1a2e; }
+    .modal-close {
+      width: 36px; height: 36px; border-radius: 50%; border: none;
+      background: #f5f5f5; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: #eee; }
+    
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 14px 16px; border: 2px solid #e8e8e8; border-radius: 12px;
+      font-size: 15px; font-family: inherit; transition: all 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: #667eea; box-shadow: 0 0 0 4px rgba(102,126,234,0.08);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    
+    .btn-full {
+      width: 100%; padding: 15px; border: none; border-radius: 14px;
+      font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-save { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(102,126,234,0.35); }
+    .btn-delete { background: #fef2f2; color: #ef4444; margin-top: 10px; }
+    .btn-delete:hover { background: #fee2e2; }
+    .btn-secondary { background: #f3f4f6; color: #374151; margin-top: 10px; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    
+    /* ===== TABS ===== */
+    .tabs {
+      display: flex; gap: 4px; background: #f0f2f5;
+      border-radius: 12px; padding: 4px; margin-bottom: 16px;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px; border: none; border-radius: 10px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      background: transparent; color: #888; transition: all 0.2s;
+    }
+    .tab-btn.active { background: #fff; color: #667eea; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed; top: 20px; left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: #1a1a2e; color: #fff; padding: 14px 22px;
+      border-radius: 14px; font-size: 14px; font-weight: 500;
+      z-index: 400; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      max-width: 90%; word-break: break-word;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #10b981; }
+    .toast.error { background: #ef4444; }
+    .toast.warning { background: #f97316; }
+    
+    /* ===== SYNC STATUS ===== */
+    .sync-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; padding: 5px 12px; border-radius: 20px;
+      font-weight: 600; transition: all 0.3s;
+    }
+    .sync-badge.synced { background: #ecfdf5; color: #059669; }
+    .sync-badge.pending { background: #fff7ed; color: #d97706; }
+    .sync-badge.offline { background: #fef2f2; color: #dc2626; }
+    .sync-badge.syncing { background: #eef2ff; color: #4f46e5; }
+    
+    .sync-badge .spinner {
+      width: 12px; height: 12px; border: 2px solid currentColor;
+      border-top-color: transparent; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* ===== EMPTY STATE ===== */
+    .empty-state { text-align: center; padding: 60px 24px; color: #bbb; }
+    .empty-state svg { margin-bottom: 16px; }
+    .empty-state h3 { font-size: 16px; color: #999; margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+    
+    /* ===== CATEGORY CHIP ===== */
+    .cat-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .cat-elektronik { background: #eef2ff; color: #4f46e5; }
+    .cat-perkakas { background: #fef3c7; color: #b45309; }
+    .cat-kantor { background: #dbeafe; color: #1d4ed8; }
+    .cat-lainnya { background: #f3f4f6; color: #6b7280; }
+    
+    /* ===== PROFILE MENU ===== */
+    .profile-menu {
+      position: absolute; top: 64px; right: 16px;
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      padding: 8px; min-width: 200px;
+      display: none; z-index: 200;
+      transform-origin: top right;
+      animation: menuIn 0.2s ease;
+    }
+    @keyframes menuIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .profile-menu.show { display: block; }
+    
+    .profile-menu-header {
+      padding: 14px 16px; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px;
+    }
+    .profile-menu-header .name { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .profile-menu-header .role { font-size: 12px; color: #888; margin-top: 2px; }
+    
+    .profile-menu-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 10px;
+      cursor: pointer; font-size: 14px; color: #374151;
+      transition: all 0.15s; border: none; background: none; width: 100%; font-family: inherit;
+    }
+    .profile-menu-item:hover { background: #f8f9fa; }
+    .profile-menu-item.danger { color: #dc2626; }
+    .profile-menu-item.danger:hover { background: #fef2f2; }
+    
+    /* ===== LOADING OVERLAY ===== */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(255,255,255,0.9);
+      display: none; align-items: center; justify-content: center; z-index: 500;
+      flex-direction: column; gap: 16px;
+    }
+    .loading-overlay.show { display: flex; }
+    .loading-overlay .spinner-large {
+      width: 48px; height: 48px;
+      border: 4px solid #e8e8e8; border-top-color: #667eea; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .loading-overlay p { color: #666; font-size: 14px; font-weight: 500; }
+    
+    /* ===== INSTALL PROMPT ===== */
+    .install-prompt {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(120%);
+      background: #1a1a2e; color: #fff; padding: 14px 20px; border-radius: 16px;
+      display: flex; align-items: center; gap: 14px; z-index: 250;
+      max-width: 90%; width: 360px; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .install-prompt.show { transform: translateX(-50%) translateY(0); }
+    .install-prompt .install-text { flex: 1; font-size: 13px; }
+    .install-prompt .install-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .install-prompt button {
+      background: #667eea; color: #fff; border: none; padding: 8px 16px;
+      border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .install-prompt .install-close {
+      background: none; color: #aaa; padding: 4px; font-size: 18px; line-height: 1;
+    }
+    
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+    
+    /* ===== PULL TO REFRESH INDICATOR ===== */
+    .ptr-indicator {
+      text-align: center; padding: 12px; color: #999; font-size: 13px;
+      display: none; transition: opacity 0.3s;
+    }
+    .ptr-indicator.show { display: block; }
+    
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .app-container { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- ===== LOGIN PAGE ===== -->
+  <div class="login-page" id="loginPage">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div class="login-title">InventarisKu</div>
+      <div class="login-subtitle">Kelola stok barang dengan mudah</div>
+      
+      <div class="login-error" id="loginError">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="loginErrorMsg">Username atau password salah</span>
+      </div>
+      
+      <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="loginUser" placeholder="Masukkan username" autocomplete="username">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="Masukkan password" autocomplete="current-password">
+      </div>
+      
+      <button class="btn-primary" id="loginBtn" onclick="doLogin()">Masuk</button>
+      
+      <div class="login-footer">
+        <span style="color:#aaa;">Demo: </span><code style="background:#f3f4f6;padding:2px 8px;border-radius:6px;font-size:12px;">admin / admin123</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div class="main-app" id="mainApp">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <div class="header-title">📦 InventarisKu</div>
+        <div class="header-user" onclick="toggleProfileMenu()">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="profile-menu" id="profileMenu">
+          <div class="profile-menu-header">
+            <div class="name" id="profileName">Admin</div>
+            <div class="role">Administrator</div>
+          </div>
+          <button class="profile-menu-item" onclick="syncToDrive(); toggleProfileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Sinkron ke Google Drive
+          </button>
+          <button class="profile-menu-item" onclick="loadFromDrive(); toggleProfileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Muat dari Google Drive
+          </button>
+          <button class="profile-menu-item" onclick="exportData(); toggleProfileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export JSON
+          </button>
+          <button class="profile-menu-item danger" onclick="doLogout(); toggleProfileMenu();">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Keluar
+          </button>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label">Total Barang</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statItems">0</div>
+          <div class="stat-label">Jenis Item</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statLow">0</div>
+          <div class="stat-label">Stok Habis</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content" id="contentArea">
+      <!-- Dashboard Tab -->
+      <div id="tabDashboard">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div class="section-title">📋 Daftar Barang</div>
+          <div class="sync-badge synced" id="syncStatus" onclick="checkSyncStatus()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            Tersinkron
+          </div>
+        </div>
+        
+        <div class="search-bar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Cari barang..." oninput="filterItems()">
+          <button class="clear-btn" id="clearSearch" onclick="clearSearch()">×</button>
+        </div>
+        
+        <div id="itemsList"></div>
+      </div>
+
+      <!-- History Tab -->
+      <div id="tabHistory" style="display:none;">
+        <div class="section-title">📜 Riwayat Penggunaan</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="setHistoryFilter('all')">Semua</button>
+          <button class="tab-btn" onclick="setHistoryFilter('in')">Masuk</button>
+          <button class="tab-btn" onclick="setHistoryFilter('out')">Keluar</button>
+        </div>
+        <div id="historyList"></div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="tabSettings" style="display:none;">
+        <div class="section-title">⚙️ Pengaturan Google Drive</div>
+        
+        <div class="item-card" style="flex-direction:column; align-items:flex-start; gap:10px; cursor:default;">
+          <div style="font-size:14px; font-weight:700; color:#1a1a2e;">🔗 ID Spreadsheet Google Drive</div>
+          <input type="text" id="sheetId" placeholder="Masukkan Spreadsheet ID..." style="width:100%; padding:12px 14px; border:2px solid #e8e8e8; border-radius:12px; font-size:14px; font-family:inherit;">
+          <div style="font-size:11px; color:#999; line-height:1.6;">
+            Contoh: <code style="background:#f3f4f6; padding:2px 8px; border-radius:6px;">1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms</code>
+          </div>
+        </div>
+        
+        <div class="item-card" style="flex-direction:column; align-items:flex-start; gap:10px; cursor:default; margin-top:10px;">
+          <div style="font-size:14px; font-weight:700; color:#1a1a2e;">🔑 API Key Google</div>
+          <input type="text" id="apiKey" placeholder="Masukkan API Key..." style="width:100%; padding:12px 14px; border:2px solid #e8e8e8; border-radius:12px; font-size:14px; font-family:inherit;">
+          <div style="font-size:11px; color:#999; line-height:1.6;">
+            Dapatkan di <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:#667eea;">Google Cloud Console</a> > APIs & Services > Credentials
+          </div>
+        </div>
+        
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveSettings()">Simpan Pengaturan</button>
+        <button class="btn-full btn-secondary" onclick="testConnection()">🧪 Test Koneksi</button>
+        
+        <div style="margin-top:24px; padding:20px; background:#f8f9fa; border-radius:16px;">
+          <div style="font-size:14px; font-weight:700; color:#1a1a2e; margin-bottom:12px;">📖 Cara Setup Google Drive:</div>
+          <ol style="font-size:12px; color:#666; padding-left:20px; line-height:2;">
+            <li>Buat spreadsheet baru di <a href="https://sheets.google.com" target="_blank" style="color:#667eea;">Google Sheets</a></li>
+            <li>Buat 2 sheet: <code>Items</code> dan <code>History</code></li>
+            <li>Buka <strong>File > Share > Anyone with the link</strong> (Viewer)</li>
+            <li>Copy ID dari URL: <code style="background:#eee; padding:2px 6px; border-radius:4px;">.../d/<b>ID_DISINI</b>/edit</code></li>
+            <li>Buka <a href="https://console.cloud.google.com" target="_blank" style="color:#667eea;">Google Cloud Console</a>, buat project baru</li>
+            <li>Aktifkan <strong>Google Sheets API</strong></li>
+            <li>Buat <strong>API Key</strong> di Credentials</li>
+            <li>Paste ID & API Key di atas, lalu tap Simpan</li>
+          </ol>
+        </div>
+        
+        <div style="margin-top:16px; padding:20px; background:#fff7ed; border-radius:16px; border:1px solid #fed7aa;">
+          <div style="font-size:13px; font-weight:700; color:#92400e; margin-bottom:8px;">⚠️ Catatan Keamanan</div>
+          <p style="font-size:12px; color:#b45309; line-height:1.7;">
+            API Key akan disimpan di localStorage browser Anda. Pastikan tidak membagikan file ini ke publik. 
+            Untuk produksi, gunakan backend server untuk menyimpan credentials.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAB -->
+    <button class="fab" id="fabBtn" onclick="openAddModal()">+</button>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('dashboard')" id="navDashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('history')" id="navHistory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Riwayat</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('settings')" id="navSettings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Pengaturan</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== ADD/EDIT MODAL ===== -->
+  <div class="modal-overlay" id="itemModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Tambah Barang</div>
+        <button class="modal-close" onclick="closeModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="form-group">
+        <label>Nama Barang</label>
+        <input type="text" id="itemName" placeholder="Contoh: Laptop Dell Latitude 7430">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="itemCategory">
+            <option value="elektronik">Elektronik</option>
+            <option value="perkakas">Perkakas</option>
+            <option value="kantor">Kantor</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Jumlah</label>
+          <input type="number" id="itemQty" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Satuan</label>
+          <input type="text" id="itemUnit" placeholder="pcs / kg / liter">
+        </div>
+        <div class="form-group">
+          <label>Min. Stok</label>
+          <input type="number" id="itemMin" placeholder="5" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Lokasi Penyimpanan</label>
+        <input type="text" id="itemLocation" placeholder="Contoh: Gudang A, Rak 3, Baris 2">
+      </div>
+      <button class="btn-full btn-save" onclick="saveItem()">Simpan Barang</button>
+      <button class="btn-full btn-delete" id="btnDelete" style="display:none;" onclick="deleteItem()">🗑️ Hapus Barang</button>
+    </div>
+  </div>
+
+  <!-- ===== TRANSACTION MODAL ===== -->
+  <div class="modal-overlay" id="transModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="modal-title" id="transModalTitle">Catat Penggunaan</div>
+        <button class="modal-close" onclick="closeTransModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="form-group">
+        <label>Barang</label>
+        <input type="text" id="transItemName" readonly style="background:#f8f9fa; color:#666;">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Jenis Transaksi</label>
+          <select id="transType">
+            <option value="out">📤 Keluar (Digunakan)</option>
+            <option value="in">📥 Masuk (Restock)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Jumlah</label>
+          <input type="number" id="transQty" placeholder="0" min="1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Catatan / Digunakan Oleh</label>
+        <input type="text" id="transNote" placeholder="Contoh: Proyek Website - Tim Marketing">
+      </div>
+      <button class="btn-full btn-save" onclick="saveTransaction()">Simpan Transaksi</button>
+    </div>
+  </div>
+
+  <!-- ===== LOADING OVERLAY ===== -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner-large"></div>
+    <p id="loadingText">Memproses...</p>
+  </div>
+
+  <!-- ===== INSTALL PROMPT ===== -->
+  <div class="install-prompt" id="installPrompt">
+    <div class="install-text">
+      <strong>Install InventarisKu</strong>
+      Tambahkan ke layar utama untuk akses cepat
+    </div>
+    <button onclick="installApp()">Install</button>
+    <button class="install-close" onclick="dismissInstall()">×</button>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast" id="toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <span id="toastMsg">Berhasil!</span>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>'''
+
+with open(f"{output_dir}/index.html", "w", encoding="utf-8") as f:
+    f.write(index_html)
+
+print("✅ index.html created")
